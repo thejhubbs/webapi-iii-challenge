@@ -45,7 +45,7 @@ router.get('/', async (req, res) => {
 
 // | GET    | /api/users/:id
 //| Returns the user object with the specified id.                                                                                                                              |
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateUserId, async (req, res) => {
   try {
     const user = await userDb.getById(req.params.id)
     res.json(user)
@@ -58,7 +58,7 @@ router.get('/:id', async (req, res) => {
 
 // | GET    | /api/users/:id/posts
 //| Returns an array of all the post objects associated with the post with the specified id.                                                                                 |
-router.get('/:id/posts', async (req, res) => {
+router.get('/:id/posts', validateUserId, async (req, res) => {
   try {
     const posts = await userDb.getUserPosts(req.params.id)
     res.json(posts)
@@ -71,7 +71,7 @@ router.get('/:id/posts', async (req, res) => {
 
 // | DELETE | /api/users/:id
 //| Removes the user with the specified id and returns the **deleted user object**. You may need to make additional calls to the database in order to satisfy this requirement. |
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateUserId, async (req, res) => {
   try {
     const user = await userDb.remove(req.params.id)
     res.send("Deleted")
@@ -84,16 +84,56 @@ router.delete('/:id', async (req, res) => {
 
 // | PUT    | /api/users/:id
 //| Updates the user with the specified `id` using data from the `request body`. Returns the modified document, **NOT the original**.                                           |
-router.put('/:id', async (req, res) => {
+router.put('/:id', validateUserId, async (req, res) => {
   try {
-    console.log(req.params.id, req.body)
     const user = await userDb.update(req.params.id, req.body)
-    res.send(user)
+    res.json(user)
   } catch {
     res.status(500).json({
       message: "Error editing the user."
     })
   }
 })
+
+//   - `validateUserId` validates the user id on every request that expects a user id parameter
+async function validateUserId(req, res, next) {
+  try{
+    const { id } = req.params;
+    const user = await userDb.getById(id)
+    if(user) {
+      //   - if the `id` parameter is valid, store that user object as `req.user`
+      req.user = user;
+      console.log("founduser")
+      next();
+    } else {
+        //   - if the `id` parameter does not match any user id in the database, cancel the request and respond with status `400` and `{ message: "invalid user id" }`
+        res.status(400).json({ message: "invalid user id" })
+    }
+  }
+  catch {
+    res.status(500).json({ message: "err" })
+  }
+};
+
+
+//   - `validateUser` validates the `body` on a request to create a new user
+function validateUser(req, res, next) {
+
+};
+//   - if the request `body` is missing, cancel the request and respond with status `400` and `{ message: "missing user data" }`
+//   - if the request `body` is missing the required `name` field, cancel the request and respond with status `400` and `{ message: "missing required name field" }`
+
+
+//   - `validatePost` validates the `body` on a request to create a new post
+function valiadatePost(req, res, next) {
+
+}
+
+//   - if the request `body` is missing, cancel the request and respond with status `400` and `{ message: "missing post data" }`
+//   - if the request `body` is missing the required `text` field, cancel the request and respond with status `400` and `{ message: "missing required text field" }`
+
+
+
+
 
 module.exports = router
