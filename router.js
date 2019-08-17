@@ -6,7 +6,7 @@ const router = express.Router();
 
 // | POST   | /api/users
 //| Creates a user using the information sent inside the `request body`.
-router.post('/', async (req, res) => {
+router.post('/', validateUser, async (req, res) => {
   try {
       const user = await userDb.insert(req.body)
       res.send(user)
@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
 
 // | POST   | /api/users/:id/posts
 //| Creates a post for the user with the specified id using information sent inside of the `request body`.                                                                   |
-router.post('/:id/posts', async (req, res) => {
+router.post('/:id/posts', validatePost, async (req, res) => {
   try {
       const post = await postDb.insert(req.body)
       res.send(post)
@@ -118,19 +118,38 @@ async function validateUserId(req, res, next) {
 
 //   - `validateUser` validates the `body` on a request to create a new user
 function validateUser(req, res, next) {
-
+  if(req.body){
+    if(req.body.name) {
+      next();
+    }else {
+      //   - if the request `body` is missing the required `name` field, cancel the request and respond with status `400` and `{ message: "missing required name field" }`
+      res.status(400).json({ message: "missing required name field" })
+    }
+  }
+  else{
+    //   - if the request `body` is missing, cancel the request and respond with status `400` and `{ message: "missing user data" }
+    res.status(400).json({ message: "missing user data" })
+  }
 };
-//   - if the request `body` is missing, cancel the request and respond with status `400` and `{ message: "missing user data" }`
-//   - if the request `body` is missing the required `name` field, cancel the request and respond with status `400` and `{ message: "missing required name field" }`
 
 
 //   - `validatePost` validates the `body` on a request to create a new post
-function valiadatePost(req, res, next) {
+function validatePost(req, res, next) {
+  if(req.body){
+    if(req.body.text) {
+      next();
+    }else {
+      //   - if the request `body` is missing the required `text` field, cancel the request and respond with status `400` and `{ message: "missing required text field" }`
+      res.status(400).json({ message: "missing required text field" })
+    }
+  }
+  else{
+    //   - if the request `body` is missing, cancel the request and respond with status `400` and `{ message: "missing post data" }`
+    res.status(400).json({ message: "missing user data" })
+  }
 
 }
 
-//   - if the request `body` is missing, cancel the request and respond with status `400` and `{ message: "missing post data" }`
-//   - if the request `body` is missing the required `text` field, cancel the request and respond with status `400` and `{ message: "missing required text field" }`
 
 
 
